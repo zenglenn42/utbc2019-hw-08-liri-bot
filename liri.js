@@ -1,29 +1,28 @@
-// https://www.npmjs.com/package/spotify-web-api-node
+const cmd = process.argv[2];
+const arg = process.argv[3];
 
 require("dotenv").config();
 
-// const axios = require("axios");
+const axios = require("axios");
 const keys = require("./keys.js");
+const Spotify = require("node-spotify-api");
 
 const spotifyClientId = keys.spotify.id;
 const spotifyClientSecret = keys.spotify.secret;
-
-const cmd = process.argv[2];
-const arg = process.argv[3];
-const Spotify = require("node-spotify-api");
-
 let spotify = new Spotify({
   id: spotifyClientId,
   secret: spotifyClientSecret
 });
 
+let moment = require("moment");
+
 switch (cmd) {
   case "spotify-this-song":
     spotifyThis(arg);
     break;
-  // case "concert-this":
-  //   concertThis(arg);
-  //   break;
+  case "concert-this":
+    concertThis(arg);
+    break;
   // case "movie-this":
   //   movieThis(arg);
   //   break;
@@ -129,5 +128,65 @@ function spotifyThis(songTitle) {
 //     track_number: 1,
 //     type: "track",
 //     uri: "spotify:track:4sPmO7WMQUAf45kwMOtONw"
+//   }
+// ];
+
+function concertThis(artistOrBand) {
+  let encodedArtistOrBand = encodeURI(artistOrBand);
+  queryUrl = `https://rest.bandsintown.com/artists/${encodedArtistOrBand}/events?app_id=codingbootcamp`;
+  axios({
+    method: "get",
+    url: queryUrl
+  }).then(function(response) {
+    let events = response.data;
+    events.map(event => {
+      let venueName = event.venue.name;
+      let venueLocation = `${event.venue.city}, ${event.venue.region}`;
+      let eventDateTime = event.datetime; // YYYY-MM-DDTHH:mm:ss
+      let eventDate = eventDateTime.split("T")[0];
+      let eventTime = eventDateTime.split("T")[1];
+      let formattedEventDate = moment(eventDate).format("MM/DD/YYYY");
+      let lineup = event.lineup;
+      if (lineup.length > 0) {
+        console.log(
+          "------------------------------------------------------------------------------------------"
+        );
+      }
+      lineup.map(group => {
+        console.log("Band/Artist:", group);
+      });
+      console.log("Venue:", venueName);
+      console.log("Location:", venueLocation);
+      console.log("Date:", formattedEventDate);
+    });
+  });
+}
+
+// let events = [
+//   {
+//     id: "101120661",
+//     artist_id: "1073911",
+//     url:
+//       "https://www.bandsintown.com/e/101120661?app_id=codingbootcamp&came_from=267&utm_medium=api&utm_source=public_api&utm_campaign=event",
+//     on_sale_datetime: "",
+//     datetime: "2019-05-25T19:00:30",
+//     description: "",
+//     venue: {
+//       country: "United States",
+//       city: "Austin",
+//       latitude: "30.208557",
+//       name: "Nutty Brown Amphitheatre",
+//       region: "TX",
+//       longitude: "-97.972533"
+//     },
+//     lineup: ["Bob Schneider Music"],
+//     offers: [
+//       {
+//         type: "Tickets",
+//         url:
+//           "https://www.bandsintown.com/t/101120661?app_id=codingbootcamp&came_from=267&utm_medium=api&utm_source=public_api&utm_campaign=ticket",
+//         status: "available"
+//       }
+//     ]
 //   }
 // ];
