@@ -23,9 +23,9 @@ switch (cmd) {
   case "concert-this":
     concertThis(arg);
     break;
-  // case "movie-this":
-  //   movieThis(arg);
-  //   break;
+  case "movie-this":
+    movieThis(arg);
+    break;
   // case "do-what-it-says":
   //   doWhatItSays(arg);
   //   break;
@@ -190,3 +190,41 @@ function concertThis(artistOrBand) {
 //     ]
 //   }
 // ];
+
+function movieThis(movieTitle) {
+  let encodedMovieTitle = encodeURI(movieTitle);
+
+  queryUrl = `http://www.omdbapi.com/?t=${encodedMovieTitle}&y=&plot=short&apikey=trilogy`;
+  axios({
+    method: "get",
+    url: queryUrl
+  }).then(function(response) {
+    // console.log(response.data);
+    // * Title of the movie.
+    // * Year the movie came out.
+    // * IMDB Rating of the movie.
+    // * Rotten Tomatoes Rating of the movie.
+    // * Country where the movie was produced.
+    // * Language of the movie.
+    // * Plot of the movie.
+    // * Actors in the movie.
+    let title = response.data.Title;
+    let year = response.data.Year;
+    let rating = response.data.imdbRating;
+    let rottenTomatoesRating = response.data.Ratings.filter(ratingObj => {
+      return ratingObj.Source.includes("Rotten Tomatoes");
+    })[0].Value;
+    let country = response.data.Country;
+    let language = response.data.Language;
+    let plot = response.data.Plot;
+    let actors = response.data.Actors;
+    console.log("Title:", title);
+    console.log("Year:", year);
+    console.log("IMDB rating:", rating);
+    console.log("Rotten Tomatores rating:", rottenTomatoesRating);
+    console.log("Country:", country);
+    console.log("Language:", language);
+    console.log("Plot:", plot);
+    console.log("Actors:", actors);
+  });
+}
