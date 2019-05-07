@@ -55,6 +55,7 @@ Actors: James Stewart, Donna Reed, Lionel Barrymore, Thomas Mitchell
 
 ### concert-this
 
+```
 $ node liri.js concert-this "Bob Schneider"
 ------------------------------------------------------------------------------------------
 Lineup: Bob Schneider Music
@@ -77,6 +78,9 @@ Lineup: Carolina Story
 Venue: Shank Hall
 Location: Milwaukee, WI
 Date: 06/18/2019
+------------------------------------------------------------------------------------------
+...
+```
 
 ### do-what-it-says
 
