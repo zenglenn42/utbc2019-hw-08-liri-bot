@@ -39,7 +39,8 @@ dispatchCmd(cmd, arg);
 function dispatchCmd(cmd, arg) {
   switch (cmd) {
     case "spotify-this-song":
-      spotifyThis(arg);
+      let exactMatchFound = false;
+      spotifyThis(arg, exactMatchFound);
       break;
     case "concert-this":
       concertThis(arg);
@@ -58,32 +59,39 @@ function dispatchCmd(cmd, arg) {
 
 // Handle each specific form of input.
 
-function spotifyThis(songTitle) {
+function spotifyThis(songTitle, exactMatchFound) {
   const defaultSongTitle = "The Sign";
-  let exactMatch = false;
 
   spotify
-    .search({ type: "track", query: songTitle, limit: 20 })
+    .search({ type: "track", query: songTitle, limit: 10 })
     .then(function(response) {
+      if (exactMatchFound) return;
+
       let trackItems = response.tracks.items;
       trackItems.map(trackItem => {
+        if (exactMatchFound) return;
+
         let albumName = trackItem.album.name;
         let previewUrl = trackItem.preview_url;
         let trackUri = trackItem.uri;
-        let trackName = trackItem.name;
+        let trackName = trackItem.name.trim();
         let trackname = trackName.toLowerCase();
-        let songtitle = songTitle.toLowerCase();
+        let songtitle = songTitle.toLowerCase().trim();
+        // console.log("trackname = ", trackname);
+        // console.log("songtitle = ", songtitle);
         if (trackname === songtitle) {
+          exactMatchFound = true;
+
           console.log(
             "------------------------------------------------------------------------------------------"
           );
-          exactMatch = true;
           let trackArtists = trackItem.artists;
           trackArtists.map(trackArtistObj => {
             let trackArtist = trackArtistObj.name;
             let trackArtistId = trackArtistObj.id;
             console.log("Artist:", trackArtist);
           });
+
           console.log("Song name:", trackName);
           if (previewUrl) {
             console.log("Preview link:", previewUrl);
@@ -100,8 +108,8 @@ function spotifyThis(songTitle) {
           // console.log("\n");
         }
       });
-      if (!exactMatch) {
-        console.log(`\nNo exact match found for song, "${songTitle}"`);
+      if (!exactMatchFound) {
+        console.log(`\nNo exact match found for song, ${songTitle}`);
         console.log(
           "Enjoy the lively stylings of 'Ace of Base' as a consolation.\n"
         );
@@ -177,7 +185,7 @@ function concertThis(artistOrBand) {
         );
       }
       lineup.map(group => {
-        console.log("Band/Artist:", group);
+        console.log("Lineup:", group);
       });
       console.log("Venue:", venueName);
       console.log("Location:", venueLocation);
@@ -254,10 +262,11 @@ function doWhatItSays(filename) {
     if (err) {
       return console.log(err);
     } else {
-      let cmd = data.split(",")[0];
-      let arg = data.split(",")[1];
-      // console.log("cmd:", cmd);
-      // console.log("arg:", arg);
+      let cmd = data.split(",")[0].trim();
+      let arg = data.split(",")[1].trim();
+      // Normalize argument by stripping double-quotes.
+      arg = arg.replace(/^\"/g, "");
+      arg = arg.replace(/"$/g, "");
       dispatchCmd(cmd, arg);
     }
   });
