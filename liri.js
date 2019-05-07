@@ -1,12 +1,15 @@
+// Capture the relevant command-line arguments.
+
 const cmd = process.argv[2];
 const arg = process.argv[3];
 
-require("dotenv").config();
+// Source in super spotify credentials and instantiate
+// a spotify object that will smooth over all the distressing details
+// of Spotify's api.  :-)
 
-const axios = require("axios");
+require("dotenv").config();
 const keys = require("./keys.js");
 const Spotify = require("node-spotify-api");
-
 const spotifyClientId = keys.spotify.id;
 const spotifyClientSecret = keys.spotify.secret;
 let spotify = new Spotify({
@@ -14,25 +17,46 @@ let spotify = new Spotify({
   secret: spotifyClientSecret
 });
 
+// Leverage the aixos package for issuing ajax calls against
+// omdb and bandsintown.com endpoints.
+
+const axios = require("axios");
+
+// We'll need this to support the 'do-what-it-says' requirement
+// where we stuff command-line arguments into a file.
+
+const fs = require("fs");
+
+// Use this to format the dates for concert events associated with
+// the 'concert-this' requirement.
+
 let moment = require("moment");
 
-switch (cmd) {
-  case "spotify-this-song":
-    spotifyThis(arg);
-    break;
-  case "concert-this":
-    concertThis(arg);
-    break;
-  case "movie-this":
-    movieThis(arg);
-    break;
-  // case "do-what-it-says":
-  //   doWhatItSays(arg);
-  //   break;
-  default:
-    console.log("Unrecognized command: ", cmd);
-    break;
+// Process the LIRI command-lind arguments.
+
+dispatchCmd(cmd, arg);
+
+function dispatchCmd(cmd, arg) {
+  switch (cmd) {
+    case "spotify-this-song":
+      spotifyThis(arg);
+      break;
+    case "concert-this":
+      concertThis(arg);
+      break;
+    case "movie-this":
+      movieThis(arg);
+      break;
+    case "do-what-it-says":
+      doWhatItSays("random.txt");
+      break;
+    default:
+      console.log("Unrecognized command: ", cmd);
+      break;
+  }
 }
+
+// Handle each specific form of input.
 
 function spotifyThis(songTitle) {
   const defaultSongTitle = "The Sign";
@@ -89,10 +113,10 @@ function spotifyThis(songTitle) {
     });
 }
 
-// Track search returns an array of items organized like this
-// response.tracks.items:
+// Here is an example array of track items related to a given song name returned from
+// a track search using the node-spotify-api npm package:
 //
-// let spotifyTrackItems = [
+// let response.tracks.items = [
 //   {
 //     album: {
 //       album_type: "album",
@@ -162,7 +186,12 @@ function concertThis(artistOrBand) {
   });
 }
 
-// let events = [
+// Here is an example array of band or artist "events" returned from bandsintown.com with
+// the following query URL:
+//
+// https://rest/bandsintown.com/artists/${encodedArtistOrBand}/events?app_id=codingbootcamp
+//
+// let response.data = [
 //   {
 //     id: "101120661",
 //     artist_id: "1073911",
@@ -199,15 +228,6 @@ function movieThis(movieTitle) {
     method: "get",
     url: queryUrl
   }).then(function(response) {
-    // console.log(response.data);
-    // * Title of the movie.
-    // * Year the movie came out.
-    // * IMDB Rating of the movie.
-    // * Rotten Tomatoes Rating of the movie.
-    // * Country where the movie was produced.
-    // * Language of the movie.
-    // * Plot of the movie.
-    // * Actors in the movie.
     let title = response.data.Title;
     let year = response.data.Year;
     let rating = response.data.imdbRating;
@@ -226,5 +246,19 @@ function movieThis(movieTitle) {
     console.log("Language:", language);
     console.log("Plot:", plot);
     console.log("Actors:", actors);
+  });
+}
+
+function doWhatItSays(filename) {
+  fs.readFile(filename, "utf-8", function(err, data) {
+    if (err) {
+      return console.log(err);
+    } else {
+      let cmd = data.split(",")[0];
+      let arg = data.split(",")[1];
+      // console.log("cmd:", cmd);
+      // console.log("arg:", arg);
+      dispatchCmd(cmd, arg);
+    }
   });
 }
